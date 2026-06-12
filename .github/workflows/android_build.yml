@@ -1,4 +1,4 @@
-name: Android Build
+name: Build Android APK
 
 on:
   workflow_dispatch:
@@ -11,23 +11,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout
+        uses: actions/checkout@v5
 
-      - uses: subosito/flutter-action@v2
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
         with:
           flutter-version: 3.35.7
+          channel: stable
+          cache: true
 
       - name: Install Very Good CLI
-        run: dart pub global activate very_good_cli
+        run: flutter pub global activate very_good_cli
 
-      - name: Install dependencies
+      - name: Get Dependencies
         run: very_good packages get --recursive
 
-      - name: Build APK
-        run: flutter build apk --release
+      - name: Build Release APK
+        run: |
+          flutter build apk \
+            --release \
+            -t lib/main_production.dart
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: release-apk
-          path: "**/build/app/outputs/flutter-apk/*.apk"
+          path: build/app/outputs/flutter-apk/app-release.apk

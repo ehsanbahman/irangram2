@@ -30,15 +30,47 @@ jobs:
       - name: Install Android NDK
         run: sdkmanager "ndk;28.0.12433566"
 
-      - name: Install Very Good CLI
-        run: flutter pub global activate very_good_cli
+      - name: Make Scripts Executable
+        run: |
+          chmod +x scripts/get_all.sh
+          chmod +x scripts/build_runner.sh
+          chmod +x scripts/build_and_open_apk.sh
+          chmod +x scripts/setup_env.sh
 
-      - name: Get Dependencies
-        run: very_good packages get --recursive
+      # Install all dependencies
+      - name: Get All Packages
+        run: ./scripts/get_all.sh
 
+      # Generate shared package
+      - name: Clean Shared
+        run: ./scripts/build_runner.sh shared clean
+
+      - name: Build Shared
+        run: ./scripts/build_runner.sh shared
+
+      # Generate insta_blocks package
+      - name: Clean Insta Blocks
+        run: ./scripts/build_runner.sh insta_blocks clean
+
+      - name: Build Insta Blocks
+        run: ./scripts/build_runner.sh insta_blocks
+
+      # Generate root code
+      - name: Clean Root
+        run: dart run build_runner clean
+
+      - name: Generate Root Code
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      # Generate localization
+      - name: Generate Localizations
+        run: flutter gen-l10n
+
+      # Build APK
       - name: Build Release APK
         run: flutter build apk --release -t lib/main_production.dart
 
+      # Upload APK
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
